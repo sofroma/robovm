@@ -27,6 +27,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
+import org.robovm.compiler.config.OnDemandResources;
 import org.robovm.compiler.config.tools.TextureAtlas;
 import org.robovm.compiler.log.ConsoleLogger;
 import org.robovm.compiler.log.Logger;
@@ -251,6 +252,15 @@ public class ToolchainUtil {
             if (v != null) {
                 minOSVersion = v;
             }
+        }
+        OnDemandResources onDemandResources = config.getOnDemandResources();
+        if(onDemandResources != null) {
+            String specificationFile = onDemandResources.getSpecificationFile();
+            File file = new File(specificationFile);
+            opts.add("--enable-on-demand-resources");
+            opts.add("YES");
+            opts.add("--asset-pack-output-specifications");
+            opts.add(file.getAbsolutePath());
         }
 
         new Executor(config.getLogger(), getACTool()).args("--output-format", "human-readable-text", opts,

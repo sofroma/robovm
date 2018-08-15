@@ -39,19 +39,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.robovm.compiler.clazz.Path;
-import org.robovm.compiler.config.AppExtension;
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.config.Resource;
+import org.robovm.compiler.config.*;
 import org.robovm.compiler.config.Resource.Walker;
-import org.robovm.compiler.config.StripArchivesConfig;
 import org.robovm.compiler.util.ToolchainUtil;
 import org.simpleframework.xml.Transient;
 
@@ -514,6 +511,96 @@ public abstract class AbstractTarget implements Target {
 		}
 	}
 
+	protected void createOnDemandResourcesDirectories(File dir) {
+        OnDemandResources onDemandResources = config.getOnDemandResources();
+        File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
+        onDemandRootDir.mkdirs();
+        for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+            String name = getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack");
+            File packDir = new File(onDemandRootDir, name);
+            packDir.mkdirs();
+        }
+    }
+
+    protected void generateOnDemandEntryPlistFiles(File dir) {
+        OnDemandResources onDemandResources = config.getOnDemandResources();
+        if(onDemandResources != null) {
+            File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
+            for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+                String[] tags;
+                if(entry.getTags().contains("\\+")) {
+                    tags = entry.getTags().split("\\+");
+                } else {
+                    tags = new String[] { entry.getTags() };
+                }
+                NSArray tagsArray = new NSArray();
+                for(int i = 0; i < tags.length; i++) {
+                    tagsArray.setValue(i, new NSString(tags[i]));
+                }
+                NSDictionary dict = new NSDictionary();
+                dict.put("Tags", tagsArray);
+                dict.put("Bundle identifier", getBundleId().concat(".asset-pack-").concat(entry.getHash()));
+                NSDictionary root = new NSDictionary();
+                root.put("Information Property List", dict);
+                File assetPackDir = new File(onDemandRootDir, getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack"));
+                File targetFile = new File(assetPackDir, "Info.plist");
+                try {
+                    PropertyListParser.saveAsBinary(root, targetFile);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+
+    protected void generateOnDemandResourcesPListFile(File dir) {
+        OnDemandResources onDemandResources = config.getOnDemandResources();
+        if(onDemandResources != null) {
+            Set<String> tagSet = new HashSet<>();
+            for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+                String[] tags;
+                if(entry.getTags().contains("\\+")) {
+                    tags = entry.getTags().split("\\+");
+                } else {
+                    tags = new String[] { entry.getTags() };
+                }
+                for(String tag : tags) {
+                    tagSet.add(tag);
+                }
+            }
+
+            NSDictionary root = new NSDictionary();
+            NSDictionary requestTags = new NSDictionary();
+            NSDictionary assetPacks = new NSDictionary();
+            root.put("NSBundleResourceRequestTags", requestTags);
+            root.put("NSBundleResourceRequestAssetPacks", assetPacks);
+
+            for(String tag : tagSet) {
+                NSDictionary tagEntry = new NSDictionary();
+                NSArray array = new NSArray();
+                for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+                    int index = 0;
+                    if(entry.getTags().contains(tag)) {
+                        array.setValue(index, new NSString(getBundleId().concat(".asset-pack-").concat(entry.getHash())));
+                        index++;
+                    }
+                }
+                tagEntry.put("NSAssetPacks", array);
+                requestTags.put(tag, tagEntry);
+            }
+            for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+                NSArray array = new NSArray();
+                assetPacks.put(getBundleId().concat(".asset-pack-").concat(entry.getHash()), array);
+            }
+            File file = new File(dir, "OnDemandResources.plist");
+            try {
+                PropertyListParser.saveAsBinary(root, file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     protected boolean isDynamicLibrary(File file) throws IOException {
         String result = ToolchainUtil.file(file);
         return result.contains("shared library");
@@ -555,6 +642,10 @@ public abstract class AbstractTarget implements Target {
     }
 
     protected void doInstall(File installDir, String image, File resourcesDir) throws IOException {
+        doInstall(installDir, image, resourcesDir, false);
+    }
+
+    protected void doInstall(File installDir, String image, File resourcesDir, boolean isArchive) throws IOException {
         if (!config.getTmpDir().equals(installDir) || !image.equals(config.getExecutableName())) {
             File destFile = new File(installDir, image);
             FileUtils.copyFile(new File(config.getTmpDir(), config.getExecutableName()), destFile);
@@ -566,7 +657,10 @@ public abstract class AbstractTarget implements Target {
             }
         }
         stripArchives(installDir);
+        createOnDemandResourcesDirectories(installDir);
         copyResources(resourcesDir);
+        generateOnDemandEntryPlistFiles(installDir);
+        generateOnDemandResourcesPListFile(installDir);
         copyDynamicFrameworks(installDir);
         copyAppExtensions(installDir);
     }

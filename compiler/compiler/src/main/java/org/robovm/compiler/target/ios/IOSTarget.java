@@ -371,6 +371,7 @@ public class IOSTarget extends AbstractTarget {
                 provisionAppExtensions(signIdentity, installDir);
                 signAppExtensions(signIdentity, installDir, getTaskAllow);
                 codesignApp(signIdentity, getOrCreateEntitlementsPList(getTaskAllow, getBundleId()), installDir);
+                signOnDemandResources(signIdentity, new File(installDir.getParentFile(), "OnDemandResources"));
             }
         }
     }
@@ -432,6 +433,22 @@ public class IOSTarget extends AbstractTarget {
             for (File framework : frameworksDir.listFiles()) {
                 if (framework.isDirectory() && framework.getName().endsWith(".framework")) {
                     codesignCustomFramework(identity, framework);
+                }
+            }
+        }
+    }
+
+    private void signOnDemandResources(SigningIdentity identity, File odrDir) throws IOException {
+        if(config.getOnDemandResources() != null) {
+            File[] onDemandResources = odrDir.listFiles(new FileFilter() {
+                @Override
+                public boolean accept(File pathname) {
+                    return pathname.getName().endsWith(".assetpack") && pathname.isDirectory();
+                }
+            });
+            if(onDemandResources != null) {
+                for(File target : onDemandResources) {
+                    codesignOnDemandResources(identity, target);
                 }
             }
         }
@@ -542,6 +559,12 @@ public class IOSTarget extends AbstractTarget {
         config.getLogger().info("Code signing app-extension '%s' using identity '%s' with fingerprint %s", extensionDir.getName(), identity.getName(),
                 identity.getFingerprint());
         codesign(identity, entitlementsPList, false, false, true, extensionDir);
+    }
+
+    private void codesignOnDemandResources(SigningIdentity identity, File dir) throws IOException {
+        config.getLogger().info("Code signing on-demand-resources '%s' using identity '%s' with fingerprint %s", dir.getName(), identity.getName(),
+                identity.getFingerprint());
+        codesign(signIdentity, null, false, false, false, dir);
     }
 
     private void codesign(SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
@@ -666,7 +689,7 @@ public class IOSTarget extends AbstractTarget {
         File tmpDir = new File(config.getInstallDir(), getExecutable() + ".app");
         FileUtils.deleteDirectory(tmpDir);
         tmpDir.mkdirs();
-        super.doInstall(tmpDir, getExecutable(), tmpDir);
+        super.doInstall(tmpDir, getExecutable(), tmpDir, true);
         prepareInstall(tmpDir);
         packageApplication(tmpDir);
     }
@@ -740,6 +763,16 @@ public class IOSTarget extends AbstractTarget {
                             StandardCopyOption.COPY_ATTRIBUTES);
                 }
             }
+        }
+
+        if(config.getOnDemandResources() != null) {
+
+            File onDemandRootDir = new File(payloadDir, "OnDemandResources");
+            onDemandRootDir.mkdirs();
+
+            File onDemandResourcesContainer = new File(appDir.getParentFile(), "OnDemandResources");
+            FileUtils.copyDirectory(onDemandResourcesContainer, onDemandRootDir);
+
         }
 
         config.getLogger().info("Zipping %s to %s", tmpDir, ipaFile);

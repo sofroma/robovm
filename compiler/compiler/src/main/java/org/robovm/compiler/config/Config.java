@@ -179,6 +179,8 @@ public class Config {
     private File infoPListFile = null;    
     @Element(required = false)
     private File iosEntitlementsPList;
+    @Element(required = false)
+    private OnDemandResources onDemandResources = null;
 
     @Element(required = false)
     private Tools tools;
@@ -562,6 +564,10 @@ public class Config {
 
     public Tools getTools() {
         return tools;
+    }
+
+    public OnDemandResources getOnDemandResources() {
+        return onDemandResources;
     }
 
     private static File makeFileRelativeTo(File dir, File f) {
