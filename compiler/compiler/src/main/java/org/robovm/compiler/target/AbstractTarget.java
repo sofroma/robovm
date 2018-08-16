@@ -513,12 +513,14 @@ public abstract class AbstractTarget implements Target {
 
 	protected void createOnDemandResourcesDirectories(File dir) {
         OnDemandResources onDemandResources = config.getOnDemandResources();
-        File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
-        onDemandRootDir.mkdirs();
-        for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
-            String name = getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack");
-            File packDir = new File(onDemandRootDir, name);
-            packDir.mkdirs();
+        if(onDemandResources != null) {
+            File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
+            onDemandRootDir.mkdirs();
+            for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
+                String name = getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack");
+                File packDir = new File(onDemandRootDir, name);
+                packDir.mkdirs();
+            }
         }
     }
 
