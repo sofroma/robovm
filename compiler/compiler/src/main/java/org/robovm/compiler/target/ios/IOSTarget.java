@@ -564,7 +564,7 @@ public class IOSTarget extends AbstractTarget {
     private void codesignOnDemandResources(SigningIdentity identity, File dir) throws IOException {
         config.getLogger().info("Code signing on-demand-resources '%s' using identity '%s' with fingerprint %s", dir.getName(), identity.getName(),
                 identity.getFingerprint());
-        codesign(signIdentity, null, false, false, false, dir);
+        codesign(identity, null, false, false, false, dir);
     }
 
     private void codesign(SigningIdentity identity, File entitlementsPList, boolean preserveMetadata, boolean verbose, boolean allocate, File target) throws IOException {
