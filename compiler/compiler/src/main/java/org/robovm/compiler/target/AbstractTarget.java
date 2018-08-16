@@ -535,8 +535,9 @@ public abstract class AbstractTarget implements Target {
                 } else {
                     tags = new String[] { entry.getTags() };
                 }
-                NSArray tagsArray = new NSArray();
-                for(int i = 0; i < tags.length; i++) {
+                int tagsLength = tags.length;
+                NSArray tagsArray = new NSArray(tagsLength);
+                for(int i = 0; i < tagsLength; i++) {
                     tagsArray.setValue(i, new NSString(tags[i]));
                 }
                 NSDictionary dict = new NSDictionary();
@@ -579,13 +580,19 @@ public abstract class AbstractTarget implements Target {
 
             for(String tag : tagSet) {
                 NSDictionary tagEntry = new NSDictionary();
-                NSArray array = new NSArray();
+                //NSArray array = new NSArray();
+                List<String> tempList = new ArrayList<>();
                 for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
                     int index = 0;
                     if(entry.getTags().contains(tag)) {
-                        array.setValue(index, new NSString(getBundleId().concat(".asset-pack-").concat(entry.getHash())));
+                        //array.setValue(index, new NSString(getBundleId().concat(".asset-pack-").concat(entry.getHash())));
+                        tempList.add(getBundleId().concat(".asset-pack-").concat(entry.getHash()));
                         index++;
                     }
+                }
+                NSArray array = new NSArray(tempList.size());
+                for(int i = 0; i < tempList.size(); i++) {
+                    array.setValue(i, new NSString(tempList.get(i)));
                 }
                 tagEntry.put("NSAssetPacks", array);
                 requestTags.put(tag, tagEntry);
