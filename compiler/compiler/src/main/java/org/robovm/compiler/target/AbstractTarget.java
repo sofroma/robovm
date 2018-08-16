@@ -543,12 +543,12 @@ public abstract class AbstractTarget implements Target {
                 NSDictionary dict = new NSDictionary();
                 dict.put("Tags", tagsArray);
                 dict.put("Bundle identifier", getBundleId().concat(".asset-pack-").concat(entry.getHash()));
-                NSDictionary root = new NSDictionary();
-                root.put("Information Property List", dict);
+                //NSDictionary root = new NSDictionary();
+                //root.put("Information Property List", dict);
                 File assetPackDir = new File(onDemandRootDir, getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack"));
                 File targetFile = new File(assetPackDir, "Info.plist");
                 try {
-                    PropertyListParser.saveAsBinary(root, targetFile);
+                    PropertyListParser.saveAsBinary(dict, targetFile);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
