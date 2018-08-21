@@ -542,7 +542,7 @@ public abstract class AbstractTarget implements Target {
                 }
                 NSDictionary dict = new NSDictionary();
                 dict.put("Tags", tagsArray);
-                dict.put("Bundle identifier", getBundleId().concat(".asset-pack-").concat(entry.getHash()));
+                dict.put("CFBundleIdentifier", getBundleId().concat(".asset-pack-").concat(entry.getHash()));
                 //NSDictionary root = new NSDictionary();
                 //root.put("Information Property List", dict);
                 File assetPackDir = new File(onDemandRootDir, getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack"));
