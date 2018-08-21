@@ -56,10 +56,37 @@ import org.robovm.apple.intents.*;
     protected NSDataAsset() {}
     protected NSDataAsset(Handle h, long handle) { super(h, handle); }
     protected NSDataAsset(SkipInit skipInit) { super(skipInit); }
+    protected long ptr;
+
     @Method(selector = "initWithName:")
-    public NSDataAsset(String name) { super((SkipInit) null); initObject(init(name)); }
+    public NSDataAsset(String name) throws FileNotFoundException {
+        super((SkipInit) null);
+        ptr = init(name);
+        if(ptr == 0) {
+            throw new FileNotFoundException("Asset with identifier '" + name + "' not found");
+        } else {
+            initObject(ptr);
+        }
+    }
+
     @Method(selector = "initWithName:bundle:")
-    public NSDataAsset(String name, NSBundle bundle) { super((SkipInit) null); initObject(init(name, bundle)); }
+    public NSDataAsset(String name, NSBundle bundle) throws FileNotFoundException {
+        super((SkipInit) null);
+        ptr = init(name, bundle);
+        if(ptr == 0) {
+            throw new FileNotFoundException("Asset with identifier '" + name + "' not found");
+        } else {
+            initObject(ptr);
+        }
+
+    }
+
+    @Override
+    protected void doDispose() {
+        if(ptr != 0)
+            super.doDispose();
+    }
+
     /*</constructors>*/
     /*<properties>*/
     @Property(selector = "name")
