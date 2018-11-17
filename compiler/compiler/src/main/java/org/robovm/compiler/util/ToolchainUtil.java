@@ -256,7 +256,7 @@ public class ToolchainUtil {
         OnDemandResources onDemandResources = config.getOnDemandResources();
         if(onDemandResources != null) {
             String specificationFile = onDemandResources.getSpecificationFile();
-            File file = new File(specificationFile);
+            File file = new File(inDir.getParentFile().getParentFile().getParentFile(), specificationFile);
             opts.add("--enable-on-demand-resources");
             opts.add("YES");
             opts.add("--asset-pack-output-specifications");
