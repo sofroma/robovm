@@ -515,6 +515,7 @@ public abstract class AbstractTarget implements Target {
         OnDemandResources onDemandResources = config.getOnDemandResources();
         if(onDemandResources != null) {
             File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
+            config.getLogger().info("Creating On-Demand Resources root directory at: " + onDemandRootDir.getAbsolutePath());
             onDemandRootDir.mkdirs();
             for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
                 String name = getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack");

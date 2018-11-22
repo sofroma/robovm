@@ -255,8 +255,13 @@ public class ToolchainUtil {
         }
         OnDemandResources onDemandResources = config.getOnDemandResources();
         if(onDemandResources != null) {
+            config.getLogger().info("Compiling On-Demand Resources assets from dir :" + inDir.getAbsolutePath() + " to: " + outDir.getAbsolutePath());
+
             String specificationFile = onDemandResources.getSpecificationFile();
             File file = new File(inDir.getParentFile().getParentFile().getParentFile(), specificationFile);
+
+            config.getLogger().info("Asset pack output specification file path: " + file.getAbsolutePath(), "");
+
             opts.add("--enable-on-demand-resources");
             opts.add("YES");
             opts.add("--asset-pack-output-specifications");
