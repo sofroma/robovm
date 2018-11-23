@@ -611,6 +611,16 @@ public abstract class AbstractTarget implements Target {
         }
     }
 
+    protected void generateAssetPackOutputSpecificationPList(File dir) {
+        OnDemandResources onDemandResources = config.getOnDemandResources();
+        if(onDemandResources != null) {
+            config.getLogger().info("Generating asset pack output specification plist file");
+            config.getLogger().info("Resources dir path: " + dir.getAbsolutePath());
+
+        }
+        System.exit(-1);
+    }
+
     protected boolean isDynamicLibrary(File file) throws IOException {
         String result = ToolchainUtil.file(file);
         return result.contains("shared library");
@@ -667,6 +677,7 @@ public abstract class AbstractTarget implements Target {
             }
         }
         stripArchives(installDir);
+        generateAssetPackOutputSpecificationPList(resourcesDir);
         createOnDemandResourcesDirectories(installDir);
         copyResources(resourcesDir);
         generateOnDemandEntryPlistFiles(installDir);
