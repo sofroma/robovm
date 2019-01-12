@@ -579,83 +579,6 @@ public abstract class AbstractTarget implements Target {
         }
     }
 
-    protected void generateAssetPackOutputSpecificationPList(File dir) {
-        OnDemandResources onDemandResources = config.getOnDemandResources();
-        if (onDemandResources != null) {
-            config.getLogger().info("Generating asset pack output specification plist file");
-            config.getLogger().info("Resources dir path: " + dir.getAbsolutePath());
-
-        }
-        System.exit(-1);
-    }
-
-    protected void generateAssetPackManifestPlist(File dir) {
-        OnDemandResources onDemandResources = config.getOnDemandResources();
-        if(onDemandResources != null && !onDemandResources.isDistribution()) {
-            config.getLogger().info("Generating asset pack manifest plist file");
-
-            NSDictionary root = new NSDictionary();
-            NSArray resources = new NSArray();
-
-            String urlOrigin = "OnDemandResources/";
-            int key = 0;
-            File onDemandRootDir = new File(dir.getParentFile(), "OnDemandResources");
-            for(OnDemandResourcesEntry entry : onDemandResources.getEntries()) {
-                NSDictionary data = new NSDictionary();
-
-
-                String url = urlOrigin.concat(getBundleId().concat(".").concat(entry.getTags()).concat(".assetpack"));
-                data.put("URL", url);
-
-                String packDirName = url.replace(urlOrigin, "");
-                File packDir = new File(onDemandRootDir, packDirName);
-                if(packDir.exists()) {
-                    File[] children = packDir.listFiles();
-                    long size = 0;
-                    for(File file : children) {
-                        size += file.length();
-                    }
-                    NSNumber number = new NSNumber(size);
-                    data.put("uncompressedSize", number);
-
-                    NSDictionary primaryContentHash = new NSDictionary();
-
-                    Date date = new Date();
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-                    String hash = format.format(date);
-                    String strategy = "modtime";
-
-                    primaryContentHash.put("hash", hash);
-                    primaryContentHash.put("strategy", strategy);
-                    data.put("primaryContentHash", primaryContentHash);
-
-                    String bundleKey = getBundleId().concat(".asset-pack-").concat(entry.getHash());
-                    data.put("bundleKey", bundleKey);
-
-                    NSNumber isStreamable = new NSNumber(0);
-                    data.put("isStreamable", isStreamable);
-
-                    resources.setValue(key, data);
-
-                } else {
-                    throw new RuntimeException("Directory " + packDir.getAbsolutePath() + " not exists");
-                }
-
-                key++;
-            }
-
-            root.put("resources", resources);
-
-            File manifestFile = new File(dir, "AssetPackManifest.plist");
-
-            try {
-                PropertyListParser.saveAsBinary(root, manifestFile);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     /**
      * strips simulator and extra architecture from mach-o binary (framework, lib, appext)
      */
@@ -739,12 +662,10 @@ public abstract class AbstractTarget implements Target {
             }
         }
         stripArchives(installDir);
-        //generateAssetPackOutputSpecificationPList(resourcesDir);
         createOnDemandResourcesDirectories(installDir);
         copyResources(resourcesDir);
         generateOnDemandEntryPlistFiles(installDir);
         generateOnDemandResourcesPListFile(installDir);
-        generateAssetPackManifestPlist(installDir);
         copyDynamicFrameworks(installDir);
         copyAppExtensions(installDir);
     }

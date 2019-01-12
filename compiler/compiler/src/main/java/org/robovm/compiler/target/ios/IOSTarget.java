@@ -451,7 +451,7 @@ public class IOSTarget extends AbstractTarget {
     }
 
     private void signOnDemandResources(SigningIdentity identity, File odrDir) throws IOException {
-        if(config.getOnDemandResources() != null && config.getOnDemandResources().isDistribution()) {
+        if(config.getOnDemandResources() != null) {
             File[] onDemandResources = odrDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File pathname) {
@@ -779,24 +779,12 @@ public class IOSTarget extends AbstractTarget {
 
         if(config.getOnDemandResources() != null) {
 
-            if(config.getOnDemandResources().isDistribution()) {
+            File onDemandRootDir = new File(payloadDir, "OnDemandResources");
+            onDemandRootDir.mkdirs();
 
-                File onDemandRootDir = new File(payloadDir, "OnDemandResources");
-                onDemandRootDir.mkdirs();
+            File onDemandResourcesContainer = new File(appDir.getParentFile(), "OnDemandResources");
+            FileUtils.copyDirectory(onDemandResourcesContainer, onDemandRootDir);
 
-                File onDemandResourcesContainer = new File(appDir.getParentFile(), "OnDemandResources");
-                FileUtils.copyDirectory(onDemandResourcesContainer, onDemandRootDir);
-
-            } else {
-                /*
-                File onDemandRootDir = new File(payloadDir, "OnDemandResources");
-                onDemandRootDir.mkdirs();
-
-                File onDemandResourcesContainer = new File(appDir.getParentFile(), "OnDemandResources");
-                FileUtils.copyDirectory(onDemandResourcesContainer, onDemandRootDir);
-                */
-
-            }
         }
 
         config.getLogger().info("Zipping %s to %s", tmpDir, ipaFile);

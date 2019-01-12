@@ -13,18 +13,11 @@ public class OnDemandResources {
     @ElementList(required = true)
     private ArrayList<OnDemandResourcesEntry> entries;
 
-    @Element(required = true)
-    private String isDistribution;
-
     public String getSpecificationFile() {
         return specificationFile;
     }
 
     public ArrayList<OnDemandResourcesEntry> getEntries() {
         return entries;
-    }
-
-    public boolean isDistribution() {
-        return isDistribution.equals("YES");
     }
 }
